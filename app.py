@@ -42,7 +42,8 @@ def predict():
 
         result = {
             'prediction': int(prediction[0]),
-            'diagnosis': 'Malignant (Anomaly Detected)' if prediction[0] == 1 else 'Benign (Normal)',
+            # sklearn breast_cancer labels: 0 = malignant, 1 = benign
+            'diagnosis': 'Malignant (Anomaly Detected)' if prediction[0] == 0 else 'Benign (Normal)',
             'confidence': round(float(probability[prediction[0]]) * 100, 2)
         }
         
