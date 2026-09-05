@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Disease Predictor</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #2c3e50; }
+        textarea { width: 100%; height: 120px; font-family: monospace; margin: 15px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button.secondary { background-color: #6c757d; }
+        button:hover { opacity: 0.9; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; font-weight: bold; }
+        .malignant { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .benign { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Diagnostic Prediction System</h1>
+        <p>Enter an array of 30 physiological measurements (Wisconsin Breast Cancer Dataset format) or load a sample profile to run the classification model.</p>
+        
+        <button class="secondary" onclick="loadSample(0)">Load Sample (Benign)</button>
+        <button class="secondary" onclick="loadSample(1)">Load Sample (Malignant)</button>
+        
+        <textarea id="features-input" placeholder="Enter JSON array of 30 floats..."></textarea>
+        
+        <button onclick="runPrediction()">Run Inference</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Sample data matching the 30 features from the sklearn dataset
+        const samples = {
+            0: [13.54,14.36,87.46,566.3,0.09779,0.08129,0.06664,0.04781,0.1885,0.05766,0.2699,0.7886,2.058,23.56,0.008462,0.0146,0.02387,0.01315,0.0198,0.0023,15.11,19.26,99.7,711.2,0.144,0.1773,0.239,0.1288,0.2977,0.07259], // Benign
+            1: [17.99,10.38,122.8,1001.0,0.1184,0.2776,0.3001,0.1471,0.2419,0.07871,1.095,0.9053,8.589,153.4,0.006399,0.04904,0.05373,0.01587,0.03003,0.006193,25.38,17.33,184.6,2019.0,0.1622,0.6656,0.7119,0.2654,0.4601,0.1189]  // Malignant
+        };
+
+        function loadSample(type) {
+            document.getElementById('features-input').value = JSON.stringify(samples[type]);
+            document.getElementById('result').style.display = 'none';
+        }
+
+        async function runPrediction() {
+            const inputVal = document.getElementById('features-input').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const featuresArray = JSON.parse(inputVal);
+                
+                // Update this URL if deploying backend to Vercel/Render
+                const response = await fetch('http://127.0.0.1:5001/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ features: featuresArray })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                    resultDiv.className = 'malignant';
+                } else {
+                    resultDiv.textContent = `Result: ${data.diagnosis} (Confidence: ${data.confidence}%)`;
+                    resultDiv.className = data.prediction === 1 ? 'malignant' : 'benign';
+                }
+                resultDiv.style.display = 'block';
+                
+            } catch (e) {
+                alert("Invalid input format. Please ensure you are providing a valid JSON array.");
+            }
+        }
+    </script>
+</body>
+</html>
