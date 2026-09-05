@@ -14,7 +14,7 @@ def serve_frontend():
     return send_from_directory(BASE_DIR, 'index.html')
 
 # Load model dynamically based on environment
-MODEL_PATH = 'model.joblib'
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model.joblib')
 try:
     model = joblib.load(MODEL_PATH)
 except Exception as e:
